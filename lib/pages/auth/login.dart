@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get.dart';
 
 import 'package:flutter/gestures.dart';
@@ -7,6 +10,7 @@ import 'package:get/instance_manager.dart';
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:urban_home/pages/auth/login_with_email/login_with_email.dart';
+import 'package:urban_home/web_services/api_provider.dart';
 
 import '../../constant/constant.dart';
 import '../screens.dart';
@@ -29,6 +33,52 @@ class _LoginState extends State<Login> {
       phoneNumber = number;
       phoneIsoCode = isoCode;
     });
+  }
+
+  loadingDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        // return object of type Dialog
+        return Dialog(
+          elevation: 0.0,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+          child: Wrap(
+            children: [
+              Container(
+                padding: EdgeInsets.all(20.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    SpinKitRing(
+                      color: primaryColor,
+                      size: 40.0,
+                      lineWidth: 1.2,
+                    ),
+                    SizedBox(height: 25.0),
+                    Text(
+                      'Please Wait..',
+                      style: grey14MediumTextStyle,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    Timer(
+        Duration(seconds: 3),
+        () => Navigator.push(
+            context,
+            PageTransition(
+                duration: Duration(milliseconds: 600),
+                type: PageTransitionType.fade,
+                child: Register())));
   }
 
   @override
@@ -70,7 +120,6 @@ class _LoginState extends State<Login> {
                       ],
                     ),
                     child: InternationalPhoneNumberInput(
-                      onInputChanged: (value) {},
                       textStyle: black14RegularTextStyle,
                       //autoValidate: false,
                       selectorTextStyle: black16MediumTextStyle,
@@ -92,14 +141,35 @@ class _LoginState extends State<Login> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: fixPadding * 2.0),
                   child: InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        PageTransition(
-                          type: PageTransitionType.rightToLeft,
-                          child: OTPScreen(),
-                        ),
-                      );
+                    onTap: () async {
+                      if (controller.text.toString().length == 11) {
+                        final number =
+                            controller.text.toString().removeAllWhitespace;
+                        loadingRing(context);
+                        final response =
+                            await ApiProvider.sendOTP(number.toString());
+                        Navigator.pop(context);
+                        if (response.statusCode >= 200 &&
+                            response.statusCode <= 210) {
+                          Navigator.push(
+                            context,
+                            PageTransition(
+                              type: PageTransitionType.rightToLeft,
+                              child: OTPScreen(
+                                number: number.toString(),
+                              ),
+                            ),
+                          );
+                        } else {
+                          Fluttertoast.showToast(
+                              msg: 'Some error occured try again later');
+                        }
+                      } else {
+                        Fluttertoast.showToast(
+                            msg: 'Enter correct 10 digit mobile number',
+                            backgroundColor: primaryColor,
+                            toastLength: Toast.LENGTH_LONG);
+                      }
                     },
                     borderRadius: BorderRadius.circular(10.0),
                     child: Container(
@@ -186,19 +256,19 @@ class _LoginState extends State<Login> {
                   ),
                 ),
                 height20Space,
-                Text.rich(TextSpan(children: [
-                  TextSpan(
-                      text: "Already have an account? ",
-                      style: black12MediumTextStyle),
-                  TextSpan(
-                      text: "Sign In",
-                      recognizer: TapGestureRecognizer()
-                        ..onTap = () {
-                          Get.to(() => LoginWithEmail());
-                        },
-                      style: primary14MediumTextStyle)
-                ])),
-                height20Space,
+                // Text.rich(TextSpan(children: [
+                //   TextSpan(
+                //       text: "Already have an account? ",
+                //       style: black12MediumTextStyle),
+                //   TextSpan(
+                //       text: "Sign In",
+                //       recognizer: TapGestureRecognizer()
+                //         ..onTap = () {
+                //           Get.to(() => LoginWithEmail());
+                //         },
+                //       style: primary14MediumTextStyle)
+                // ])),
+                // height20Space,
               ],
             ),
           ],

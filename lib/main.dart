@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
+import 'package:urban_home/pages/urban_clap_homestate.dart';
 
 import 'constant/constant.dart';
 import 'pages/screens.dart';
@@ -38,7 +39,7 @@ class MyApp extends StatelessWidget {
         const Locale('es'),
         const Locale('en'),
       ],
-      home: SplashScreen(),
+      home: UrbanClapHomeState(),
     );
   }
 }

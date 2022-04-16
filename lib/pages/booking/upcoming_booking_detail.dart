@@ -1,9 +1,15 @@
 import 'package:dotted_line/dotted_line.dart';
 import 'package:flutter/material.dart';
+import 'package:urban_home/web_services/api_provider.dart';
+import 'package:urban_home/web_services/urls.dart';
 import '../../constant/constant.dart';
 import '../screens.dart';
 
 class UpcomingBooking extends StatefulWidget {
+  final bookingData;
+
+  const UpcomingBooking({Key key, @required this.bookingData})
+      : super(key: key);
   @override
   _UpcomingBookingState createState() => _UpcomingBookingState();
 }
@@ -61,7 +67,10 @@ class _UpcomingBookingState extends State<UpcomingBooking> {
                           ),
                         ),
                         InkWell(
-                          onTap: () {
+                          onTap: () async {
+                            loadingRing(context);
+                            await ApiProvider.deleteMethod('/api/deletebooking/${widget.bookingData["_id"]}');
+                            Navigator.pop(context);
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -106,7 +115,10 @@ class _UpcomingBookingState extends State<UpcomingBooking> {
         elevation: 1.0,
         backgroundColor: whiteColor,
         title: Text(
-          'Booking ID 2097',
+          'Booking ID ' +
+              widget.bookingData['_id'].toString().substring(
+                  widget.bookingData['_id'].toString().length - 4,
+                  widget.bookingData['_id'].toString().length - 1),
           style: appBarTextStyle,
         ),
         leading: IconButton(
@@ -181,7 +193,7 @@ class _UpcomingBookingState extends State<UpcomingBooking> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Amara Smith',
+                    widget.bookingData['service']['name'],
                     style: black16BoldTextStyle,
                   ),
                   Text(

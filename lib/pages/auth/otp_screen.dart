@@ -1,12 +1,19 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:page_transition/page_transition.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:urban_home/web_services/api_provider.dart';
 import '../../constant/constant.dart';
 import '../screens.dart';
 
 class OTPScreen extends StatefulWidget {
+  final number;
+
+  const OTPScreen({Key key, @required this.number}) : super(key: key);
   @override
   _OTPScreenState createState() => _OTPScreenState();
 }
@@ -19,52 +26,6 @@ class _OTPScreenState extends State<OTPScreen> {
   FocusNode secondFocusNode = FocusNode();
   FocusNode thirdFocusNode = FocusNode();
   FocusNode fourthFocusNode = FocusNode();
-
-  loadingDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        // return object of type Dialog
-        return Dialog(
-          elevation: 0.0,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-          child: Wrap(
-            children: [
-              Container(
-                padding: EdgeInsets.all(20.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: <Widget>[
-                    SpinKitRing(
-                      color: primaryColor,
-                      size: 40.0,
-                      lineWidth: 1.2,
-                    ),
-                    SizedBox(height: 25.0),
-                    Text(
-                      'Please Wait..',
-                      style: grey14MediumTextStyle,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-    Timer(
-        Duration(seconds: 3),
-        () => Navigator.push(
-            context,
-            PageTransition(
-                duration: Duration(milliseconds: 600),
-                type: PageTransitionType.fade,
-                child: Register())));
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -239,8 +200,50 @@ class _OTPScreenState extends State<OTPScreen> {
                           border: InputBorder.none,
                         ),
                         textAlign: TextAlign.center,
-                        onChanged: (v) {
-                          loadingDialog();
+                        onChanged: (v) async {
+                          if (firstController.text.isNotEmpty &&
+                              secondController.text.isNotEmpty &&
+                              thirdController.text.isNotEmpty &&
+                              fourthController.text.isNotEmpty) {
+                            String otp = firstController.text.toString() +
+                                secondController.text.toString() +
+                                thirdController.text.toString() +
+                                fourthController.text.toString();
+                            loadingRing(context);
+                            final response = await ApiProvider.validateOtp(
+                                widget.number, otp);
+                            Navigator.pop(context);
+                            if (response.statusCode >= 200 &&
+                                response.statusCode <= 210) {
+                              /// logic of is user is registered or not
+                              bool isRegistered =
+                                  jsonDecode(response.body)["user"]
+                                      ["isregistered"];
+                              print("User registered status = " +
+                                  isRegistered.toString());
+                              if (isRegistered == true) {
+                                Navigator.of(context).pushReplacement(
+                                    MaterialPageRoute(
+                                        builder: (context) => BottomBar()));
+                              } else {
+                                Navigator.of(context).pushReplacement(
+                                    MaterialPageRoute(
+                                        builder: (context) => Register()));
+                              }
+                            } else if (response.statusCode < 410) {
+                              Fluttertoast.showToast(
+                                  msg: 'Enter correct OTP',
+                                  backgroundColor: primaryColor);
+                            } else {
+                              Fluttertoast.showToast(
+                                  msg: 'Some error occured try again later',
+                                  backgroundColor: primaryColor);
+                            }
+                          } else {
+                            Fluttertoast.showToast(
+                                msg: 'Enter correct OTP',
+                                backgroundColor: primaryColor);
+                          }
                         },
                       ),
                     ),
@@ -281,7 +284,50 @@ class _OTPScreenState extends State<OTPScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: fixPadding * 2.0),
                 child: InkWell(
-                  onTap: () => loadingDialog(),
+                  onTap: () async {
+                    if (firstController.text.isNotEmpty &&
+                        secondController.text.isNotEmpty &&
+                        thirdController.text.isNotEmpty &&
+                        fourthController.text.isNotEmpty) {
+                      String otp = firstController.text.toString() +
+                          secondController.text.toString() +
+                          thirdController.text.toString() +
+                          fourthController.text.toString();
+                      loadingRing(context);
+                      final response =
+                          await ApiProvider.validateOtp(widget.number, otp);
+                      Navigator.pop(context);
+                      if (response.statusCode >= 200 &&
+                          response.statusCode <= 210) {
+                        /// logic of is user is registered or not
+                        bool isRegistered =
+                            jsonDecode(response.body)["user"]["isregistered"];
+                        print("User registered status = " +
+                            isRegistered.toString());
+                        if (isRegistered == true) {
+                          Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(
+                                  builder: (context) => BottomBar()));
+                        } else {
+                          Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(
+                                  builder: (context) => Register()));
+                        }
+                      } else if (response.statusCode < 410) {
+                        Fluttertoast.showToast(
+                            msg: 'Enter correct OTP',
+                            backgroundColor: primaryColor);
+                      } else {
+                        Fluttertoast.showToast(
+                            msg: 'Some error occured try again later',
+                            backgroundColor: primaryColor);
+                      }
+                    } else {
+                      Fluttertoast.showToast(
+                          msg: 'Enter correct OTP',
+                          backgroundColor: primaryColor);
+                    }
+                  },
                   borderRadius: BorderRadius.circular(10.0),
                   child: Container(
                     width: double.infinity,

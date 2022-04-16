@@ -1,7 +1,8 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:urban_home/web_services/api_provider.dart';
+import 'package:urban_home/web_services/user.dart';
 import '../constant/constant.dart';
 import 'screens.dart';
 
@@ -19,7 +20,6 @@ class _BottomBarState extends State<BottomBar> {
   @override
   void initState() {
     super.initState();
-
     if (widget.index != null) {
       setState(() {
         currentIndex = widget.index;
@@ -29,6 +29,18 @@ class _BottomBarState extends State<BottomBar> {
         currentIndex = 1;
       });
     }
+    getUserDetails();
+    isLoading = false;
+    setState(() {});
+  }
+
+  getUserDetails() async {
+    dynamic r = await ApiProvider.getMethodAuthorized('/api/getuser');
+    User.name = await r["getuser"]["name"].toString();
+    User.email = await r["getuser"]["email"].toString();
+    User.number = await r["getuser"]["number"].toString();
+    User.image = await r["getuser"]["image"].toString();
+    print(User.name + User.email + User.number + User.image);
   }
 
   changeIndex(index) {
@@ -37,6 +49,7 @@ class _BottomBarState extends State<BottomBar> {
     });
   }
 
+  bool isLoading = true;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -59,24 +72,32 @@ class _BottomBarState extends State<BottomBar> {
           ),
         ),
       ),
-      body: WillPopScope(
-        child: (currentIndex == 1)
-            ? HomePage()
-            : (currentIndex == 2)
-                ? MyBooking()
-                : (currentIndex == 3)
-                    ? ChatList()
-                    : (currentIndex == 4)
-                        ? UrbanHomeCash()
-                        : Profile(),
-        onWillPop: () async {
-          bool backStatus = onWillPop();
-          if (backStatus) {
-            exit(0);
-          }
-          return false;
-        },
-      ),
+      body: isLoading
+          ? Center(
+              child: SizedBox(
+                  height: 40,
+                  width: 40,
+                  child: CircularProgressIndicator(
+                    color: primaryColor,
+                  )))
+          : WillPopScope(
+              child: (currentIndex == 1)
+                  ? HomePage()
+                  : (currentIndex == 2)
+                      ? MyBooking()
+                      : (currentIndex == 3)
+                          ? ChatList()
+                          : (currentIndex == 4)
+                              ? UrbanHomeCash()
+                              : Profile(),
+              onWillPop: () async {
+                bool backStatus = onWillPop();
+                if (backStatus) {
+                  exit(0);
+                }
+                return false;
+              },
+            ),
     );
   }
 

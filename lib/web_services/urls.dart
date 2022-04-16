@@ -1,5 +1,5 @@
 final baseUrl = 'https://brijesh-patel.herokuapp.com';
-
+final imageBaseUrl = 'https://brijesh-patel.herokuapp.com/upload/image/';
 class UserUrl {
   static String otpSend = baseUrl + '/api/userOtp';
   static String verifyOtp = baseUrl + '/api/verifyOtp';

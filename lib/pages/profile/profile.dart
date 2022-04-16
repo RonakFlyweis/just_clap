@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
+import 'package:urban_home/web_services/api_provider.dart';
+import 'package:urban_home/web_services/user.dart';
 import '../../constant/constant.dart';
 import '../screens.dart';
 
@@ -61,7 +63,8 @@ class _ProfileState extends State<Profile> {
                           ),
                         ),
                         InkWell(
-                          onTap: () {
+                          onTap: () async {
+                            await ApiProvider.logout(context);
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -179,16 +182,28 @@ class _ProfileState extends State<Profile> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               ClipRRect(
-                borderRadius: BorderRadius.circular(35.0),
-                child: Image.asset(
-                  'assets/user/user_5.jpg',
-                  width: 70.0,
-                  height: 70.0,
-                ),
-              ),
+                  borderRadius: BorderRadius.circular(35.0),
+                  child: Container(
+                    width: 70.0,
+                    height: 70.0,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(30.0),
+                      image: DecorationImage(
+                        image: NetworkImage(User.image),
+                        fit: BoxFit.cover,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          blurRadius: 4.0,
+                          spreadRadius: 1.0,
+                          color: blackColor.withOpacity(0.25),
+                        ),
+                      ],
+                    ),
+                  )),
               widthSpace,
               Text(
-                'Stella French',
+                User.name,
                 style: black16BoldTextStyle,
               ),
             ],

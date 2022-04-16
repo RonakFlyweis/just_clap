@@ -1,5 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:urban_home/web_services/api_provider.dart';
+import 'package:urban_home/web_services/user.dart';
 import '../../constant/constant.dart';
+import 'package:image_picker/image_picker.dart';
 
 class EditProfile extends StatefulWidget {
   @override
@@ -7,18 +11,38 @@ class EditProfile extends StatefulWidget {
 }
 
 class _EditProfileState extends State<EditProfile> {
+  File _image;
+  final picker = ImagePicker();
   final nameController = TextEditingController();
   final emailController = TextEditingController();
-  final phoneController = TextEditingController();
-  final passwordController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    nameController.text = 'Stella French';
-    emailController.text = 'stella@test.com';
-    phoneController.text = '123456789';
-    passwordController.text = '1234567';
+    nameController.text = User.name;
+    emailController.text = User.email;
+  }
+
+  Future getCameraImage() async {
+    final pickedFile = await picker.pickImage(source: ImageSource.camera);
+
+    if (pickedFile != null) {
+      _image = File(pickedFile.path);
+      setState(() {});
+    } else {
+      print('No image selected');
+    }
+  }
+
+  /// Get image from gallery
+  Future getGalleryImage() async {
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      _image = File(pickedFile.path);
+      setState(() {});
+    } else {
+      print('No image selected');
+    }
   }
 
   @override
@@ -63,12 +87,19 @@ class _EditProfileState extends State<EditProfile> {
                           height: 140.0,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(70.0),
-                            image: DecorationImage(
-                              image: AssetImage(
-                                'assets/user/user_5.jpg',
-                              ),
-                              fit: BoxFit.cover,
-                            ),
+                            image: _image != null
+                                ? DecorationImage(
+                                    image: FileImage(
+                                      _image,
+                                    ),
+                                    fit: BoxFit.cover,
+                                  )
+                                : DecorationImage(
+                                    image: NetworkImage(
+                                      User.image,
+                                    ),
+                                    fit: BoxFit.cover,
+                                  ),
                           ),
                         ),
                       ),
@@ -174,64 +205,20 @@ class _EditProfileState extends State<EditProfile> {
                 ),
                 // Email Field End
 
-                // Phone Number Field Start
-                Container(
-                  padding: EdgeInsets.only(top: fixPadding, bottom: fixPadding),
-                  child: Theme(
-                    data: ThemeData(
-                      primaryColor: greyColor,
-                      textSelectionTheme: TextSelectionThemeData(
-                        cursorColor: primaryColor,
-                      ),
-                    ),
-                    child: TextField(
-                      controller: phoneController,
-                      keyboardType: TextInputType.number,
-                      style: black14MediumTextStyle,
-                      decoration: InputDecoration(
-                        labelText: 'Phone Number',
-                        labelStyle: black14MediumTextStyle,
-                        border: OutlineInputBorder(
-                          borderSide: BorderSide(color: greyColor, width: 0.7),
-                        ),
-                      ),
-                      onChanged: (value) {},
-                    ),
-                  ),
-                ),
-                // Phone Number Field End
-
-                // Password Field Start
-                Container(
-                  padding: EdgeInsets.only(top: fixPadding, bottom: fixPadding),
-                  child: Theme(
-                    data: ThemeData(
-                      primaryColor: greyColor,
-                      textSelectionTheme: TextSelectionThemeData(
-                        cursorColor: primaryColor,
-                      ),
-                    ),
-                    child: TextField(
-                      controller: passwordController,
-                      keyboardType: TextInputType.number,
-                      style: black14MediumTextStyle,
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        labelStyle: black14MediumTextStyle,
-                        border: OutlineInputBorder(
-                          borderSide: BorderSide(color: greyColor, width: 0.7),
-                        ),
-                      ),
-                      obscureText: true,
-                      onChanged: (value) {},
-                    ),
-                  ),
-                ),
-                // Password Field End
                 heightSpace,
                 // Save Button Start
                 InkWell(
-                  onTap: () => Navigator.pop(context),
+                  onTap: () async {
+                    if (_image != null) {
+                      loadingRing(context);
+                      await ApiProvider.updateUser(
+                          nameController.text.toString(),
+                          emailController.text.toString(),
+                          _image.path.toString());
+                      Navigator.pop(context);
+                    }
+                    Navigator.pop(context);
+                  },
                   borderRadius: BorderRadius.circular(7.0),
                   child: Container(
                     width: width,
@@ -289,6 +276,7 @@ class _EditProfileState extends State<EditProfile> {
                         ),
                         InkWell(
                           onTap: () {
+                            getCameraImage();
                             Navigator.pop(context);
                           },
                           child: Container(
@@ -313,6 +301,7 @@ class _EditProfileState extends State<EditProfile> {
                         ),
                         InkWell(
                           onTap: () {
+                            getGalleryImage();
                             Navigator.pop(context);
                           },
                           child: Container(
